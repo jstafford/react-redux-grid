@@ -1,9 +1,6 @@
 import { SORT_DIRECTIONS } from '../constants/GridConstants';
 
 export class Sorter {
-    constructor() {
-
-    }
 
     sortBy(name, direction, datasource) {
         return datasource.data.sort((a, b) => {
@@ -16,6 +13,7 @@ export class Sorter {
                 return direction === SORT_DIRECTIONS.ASCEND ? -1 : 1;
             }
 
+            return 0;
         });
     }
 }
