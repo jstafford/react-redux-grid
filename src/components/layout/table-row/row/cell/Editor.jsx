@@ -2,12 +2,14 @@ import React, { PropTypes } from 'react';
 import { Input } from './Input';
 import { gridConfig } from './../../../../../constants/GridConstants';
 import { prefix } from './../../../../../util/prefix';
+import { fireEvent } from './../../../../../util/fire';
 import { nameFromDataIndex } from './../../../../../util/getData';
 
 export const Editor = ({
     cellData,
     columns,
     editorState,
+    events,
     rawValue,
     index,
     isEditable,
@@ -34,6 +36,11 @@ export const Editor = ({
     }
 
     const editorData = editorState.get(rowId) || new Map();
+    const invalid = editorData
+        && editorData.invalidCells
+        && editorData.invalidCells.contains(colName)
+        ? true
+        : null;
 
     const value = editorData.values
         && editorData.values.get
@@ -47,6 +54,31 @@ export const Editor = ({
         isRowSelected,
         store
     };
+
+    const wrapperCls = prefix(
+        CLASS_NAMES.EDITOR.INLINE.INPUT_WRAPPER,
+        invalid ? CLASS_NAMES.EDITOR.INVALID : ''
+    );
+
+    const onFocus = () => fireEvent(
+        'HANDLE_EDITOR_FOCUS',
+        events,
+        {
+            column: columns[index],
+            rowId,
+            editor: editorData
+        }
+    );
+
+    const onBlur = () => fireEvent(
+        'HANDLE_EDITOR_BLUR',
+        events,
+        {
+            column: columns[index],
+            rowId,
+            editor: editorData
+        }
+    );
 
     if (isEditable
         && columns[index]
@@ -63,18 +95,21 @@ export const Editor = ({
                 columns,
                 store,
                 rowId,
+                onFocus,
+                onBlur,
                 row: editorData && editorData.values && editorData.toJS
                     ? { ...row, ...cleanProps(editorData.values.toJS()) }
                     : { key: rowId, ...row },
                 columnIndex: index,
                 value: value && value.toJS ? value.toJS() : value,
                 isRowSelected,
-                stateKey
+                stateKey,
+                isCreate: editorData.isCreate
             }
         );
 
         return (
-            <span className={prefix(CLASS_NAMES.EDITOR.INLINE.INPUT_WRAPPER)}>
+            <span className={wrapperCls}>
                 { input }
             </span>
         );
@@ -88,12 +123,14 @@ export const Editor = ({
                 : true)) {
 
         return (
-            <span className={prefix(CLASS_NAMES.EDITOR.INLINE.INPUT_WRAPPER)}>
+            <span className={wrapperCls}>
                 <Input
                     cellData={value}
                     column={columns[index]}
                     columns={columns}
                     editorState={editorState}
+                    onBlur={onBlur}
+                    onFocus={onFocus}
                     rowId={rowId}
                     stateKey={stateKey}
                     store={store}
@@ -103,7 +140,7 @@ export const Editor = ({
     }
 
     return (
-        <span className={ prefix(CLASS_NAMES.INACTIVE_CLASS) }>
+        <span className={prefix(CLASS_NAMES.INACTIVE_CLASS)}>
             { cellData }
         </span>
     );
@@ -120,6 +157,7 @@ Editor.propTypes = {
     cellData: any,
     columns: array,
     editorState: object,
+    events: object,
     index: number,
     isEditable: bool,
     isRowSelected: bool,
