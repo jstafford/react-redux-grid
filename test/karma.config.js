@@ -1,5 +1,5 @@
-const loaders = require('../webpack/loaders');
-const preLoaders = require('../webpack/preloaders');
+const path = require('path');
+const rules = require('../webpack/rules');
 
 const BROWSERS = process.argv && process.argv.indexOf('--browser') !== -1
     ? ['jsdom', 'Chrome']
@@ -10,14 +10,22 @@ const COVERAGE = process.argv && process.argv.indexOf('--coverage') !== -1;
 const SINGLE_RUN = process.argv
     && process.argv.indexOf('--no-single-run') === -1;
 
-const PRELOADERS = COVERAGE ? preLoaders : [];
-
 const REPORTERS = COVERAGE
-    ? ['spec', 'coverage']
+    ? ['spec', 'coverage-istanbul']
     : ['spec'];
 
+const ISTANBUL_RULE = {
+    test: /\.js$|\.jsx$/,
+    include: path.resolve('../src/'),
+    loader: 'istanbul-instrumenter-loader'
+};
+
 module.exports = function exports(config) {
+    if (COVERAGE) {
+        rules.push(ISTANBUL_RULE);
+    }
     config.set({
+        basePath: './',
         browsers: BROWSERS,
         files: [
             './../webpack/webpack.test.js'
@@ -29,7 +37,7 @@ module.exports = function exports(config) {
         plugins: [
             'karma-chrome-launcher',
             'karma-chai',
-            'karma-coverage',
+            'karma-coverage-istanbul-reporter',
             'karma-mocha',
             'karma-mocha-reporter',
             'karma-es6-shim',
@@ -60,20 +68,11 @@ module.exports = function exports(config) {
         },
         singleRun: SINGLE_RUN,
         webpack: {
-            // isparta: {
-            //     embedSource: true,
-            //     noAutoWrap: true,
-            //     babel: {
-            //         presets: ['es2015', 'stage-0', 'react']
-            //     }
-            // },
             resolve: {
                 extensions: ['.js', '.jsx', '.styl']
             },
             module: {
-                // preLoaders: PRELOADERS,
-                // rules: PRELOADERS.concat(loaders)
-                rules: loaders
+                rules: rules
             },
             externals: {
                 cheerio: 'window',
@@ -93,15 +92,15 @@ module.exports = function exports(config) {
             noInfo: true,
             quiet: true
         },
-        // coverageIstanbulReporter: {
-        //     reports: [ 'text-summary' ],
-        //     fixWebpackSourcePaths: true
-        // },
-        coverageReporter: {
-            reporters: [
-                { type: 'text' },
-                { type: 'lcovonly', subdir: './../../' }
-            ]
+        coverageIstanbulReporter: {
+            reports: ['text', 'lcovonly'],
+            dir: './coverage',
+            fixWebpackSourcePaths: true,
+            'report-options': {
+                text: {
+                    maxCols: 80
+                }
+            }
         }
     });
 };

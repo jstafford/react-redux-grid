@@ -1,4 +1,7 @@
-const loaders = require('./loaders');
+const path = require('path');
+const rules = require('./rules');
+
+process.env.NODE_ENV = 'production';
 
 module.exports = {
     entry: [
@@ -10,7 +13,7 @@ module.exports = {
         }
     },
     output: {
-        path: __dirname + '/../demo/lib',
+        path: path.resolve(__dirname, '../demo/lib'),
         filename: 'bundle.js',
         sourceMapFilename: 'debugging/[file].map',
         publicPath: 'http://localhost:8080/demo/lib/',
@@ -24,7 +27,7 @@ module.exports = {
         extensions: ['.js', '.jsx', '.styl']
     },
     module: {
-        rules: loaders
+        rules: rules
     },
     devtool: 'inline-source-map'
 };

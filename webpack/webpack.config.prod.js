@@ -1,12 +1,13 @@
+const path = require('path');
 const webpack = require('webpack');
-const loaders = require('./loaders');
+const rules = require('./rules');
 
 module.exports = {
     entry: [
         './demo/entry.js'
     ],
     output: {
-        path: __dirname + '/../demo/lib',
+        path: path.resolve(__dirname, '../demo/lib'),
         filename: 'bundle.js',
         publicPath: 'lib/'
     },
@@ -15,10 +16,10 @@ module.exports = {
         fs: 'empty'
     },
     module: {
-        loaders: loaders
+        rules: rules
     },
     resolve: {
-        extensions: ['', '.js', '.jsx', '.styl']
+        extensions: ['.js', '.jsx', '.styl']
     },
     plugins: [
         new webpack.DefinePlugin({
